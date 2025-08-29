@@ -1,0 +1,74 @@
+-- Services
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local RunService = game:GetService("RunService")
+
+-- Function to add highlight
+local function addHighlight(character)
+    if character:FindFirstChild("Highlight") then return end
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "Highlight"
+    highlight.FillColor = Color3.fromRGB(0, 255, 0)
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.Parent = character
+end
+
+-- Function to remove highlight
+local function removeHighlight(character)
+    if character:FindFirstChild("Highlight") then
+        character.Highlight:Destroy()
+    end
+end
+
+-- Create UI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "HighlightUI"
+screenGui.Parent = PlayerGui
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 60, 0, 30) -- Small button
+button.Position = UDim2.new(0.95, -60, 0.05, 0) -- Top-right
+button.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Text = "OFF" -- Initial state
+button.Parent = screenGui
+
+-- Toggle logic
+local highlightActive = false
+button.MouseButton1Click:Connect(function()
+    highlightActive = not highlightActive
+    local character = LocalPlayer.Character
+    if character then
+        if highlightActive then
+            addHighlight(character)
+            button.Text = "ON"
+        else
+            removeHighlight(character)
+            button.Text = "OFF"
+        end
+    end
+end)
+
+-- Automatically add highlight if character spawns while active
+LocalPlayer.CharacterAdded:Connect(function(character)
+    if highlightActive then
+        character:WaitForChild("HumanoidRootPart")
+        addHighlight(character)
+    end
+end)
+
+-- Refresh every second and print "HI"
+spawn(function()
+    while true do
+        task.wait(1) -- Wait 1 second
+        print("HI") -- Console proof of refresh
+
+        -- Refresh highlight if active
+        if highlightActive and LocalPlayer.Character then
+            addHighlight(LocalPlayer.Character)
+        end
+    end
+end)
