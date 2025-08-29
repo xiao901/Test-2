@@ -1,0 +1,94 @@
+-- Services
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Function to add highlight to a character
+local function addHighlight(character)
+    if character:FindFirstChild("Highlight") then return end
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "Highlight"
+    highlight.FillColor = Color3.fromRGB(0, 255, 0)
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.Parent = character
+end
+
+-- Function to remove highlight from a character
+local function removeHighlight(character)
+    if character:FindFirstChild("Highlight") then
+        character.Highlight:Destroy()
+    end
+end
+
+-- Toggle logic
+local espActive = false
+
+-- Create UI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ESP_UI"
+screenGui.Parent = PlayerGui
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 60, 0, 30) -- Small button
+button.Position = UDim2.new(0.95, -60, 0.05, 0) -- Top-right
+button.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Text = "OFF" -- Initial state
+button.Parent = screenGui
+
+-- Toggle ESP on button click
+button.MouseButton1Click:Connect(function()
+    espActive = not espActive
+    button.Text = espActive and "ON" or "OFF"
+
+    -- Apply or remove highlight for all current players
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Character then
+            if espActive then
+                addHighlight(player.Character)
+            else
+                removeHighlight(player.Character)
+            end
+        end
+    end
+end)
+
+-- Automatically add/remove highlight when a player respawns
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        if espActive then
+            character:WaitForChild("HumanoidRootPart")
+            addHighlight(character)
+        end
+    end)
+end)
+
+-- Also handle characters that already exist when script runs
+for _, player in pairs(Players:GetPlayers()) do
+    if player.Character then
+        player.CharacterAdded:Connect(function(character)
+            if espActive then
+                character:WaitForChild("HumanoidRootPart")
+                addHighlight(character)
+            end
+        end)
+    end
+end
+
+-- Refresh every second and print "HI"
+spawn(function()
+    while true do
+        task.wait(1)
+        print("HI") -- Console proof of refresh
+
+        if espActive then
+            for _, player in pairs(Players:GetPlayers()) do
+                if player.Character then
+                    addHighlight(player.Character)
+                end
+            end
+        end
+    end
+end)
